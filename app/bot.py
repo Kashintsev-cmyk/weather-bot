@@ -9,6 +9,7 @@ from contextlib import suppress
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
+    BotCommand,
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -66,6 +67,25 @@ HELP_TEXT = (
     "Open-Meteo Marine API и USGS (землетрясения). Числа в сводке — медиана "
     "по площадкам, отдельно показан разброс, если источники расходятся."
 )
+
+
+# Меню команд Telegram (кнопка «Меню» рядом с полем ввода).
+BOT_COMMANDS: tuple[BotCommand, ...] = (
+    BotCommand(command="weather", description="Погода сейчас и прогноз по дням"),
+    BotCommand(command="sea", description="Море: вода, волна и прогноз волнения"),
+    BotCommand(command="events", description="Опасные события ближайших часов"),
+    BotCommand(command="full", description="Полная сводка с разбором площадок"),
+    BotCommand(command="subscribe", description="Подписаться на сводку и оповещения"),
+    BotCommand(command="unsubscribe", description="Отключить рассылку"),
+    BotCommand(command="status", description="Состояние рассылки и подписки"),
+    BotCommand(command="whoami", description="Показать мой chat_id"),
+    BotCommand(command="help", description="Справка по командам"),
+)
+
+
+async def set_bot_commands(bot: Bot) -> None:
+    """Регистрирует список команд для меню Telegram (setMyCommands)."""
+    await bot.set_my_commands(list(BOT_COMMANDS))
 
 
 def build_keyboard() -> InlineKeyboardMarkup:
@@ -342,6 +362,11 @@ async def main() -> None:
 
     bot = Bot(token=settings.telegram_bot_token)
     cache = ReportCache(settings)
+
+    try:
+        await set_bot_commands(bot)
+    except Exception:  # noqa: BLE001 - меню не критично, бот должен подняться
+        logger.warning("Не удалось зарегистрировать команды меню", exc_info=True)
 
     async def send(chat_id: int, text: str) -> None:
         """Отправка сообщения рассылки в Telegram."""

@@ -11,6 +11,7 @@ from app.config import Settings
 aiogram = pytest.importorskip("aiogram", reason="aiogram нужен для проверки бота")
 
 from app.bot import (  # noqa: E402
+    BOT_COMMANDS,
     EVENT_SECTIONS,
     FULL_SECTIONS,
     MAX_MESSAGE_LENGTH,
@@ -18,6 +19,7 @@ from app.bot import (  # noqa: E402
     WEATHER_SECTIONS,
     build_keyboard,
     create_dispatcher,
+    set_bot_commands,
 )
 from app.formatting import (  # noqa: E402
     SECTION_CURRENT,
@@ -74,6 +76,44 @@ def test_split_short_text_is_single_chunk() -> None:
 
     assert _split("короткий текст") == ["короткий текст"]
     assert MAX_MESSAGE_LENGTH < 4096
+
+
+def test_bot_commands_menu_matches_handlers() -> None:
+    """Меню команд (setMyCommands) перечисляет все пользовательские команды."""
+    names = [command.command for command in BOT_COMMANDS]
+
+    assert names == [
+        "weather",
+        "sea",
+        "events",
+        "full",
+        "subscribe",
+        "unsubscribe",
+        "status",
+        "whoami",
+        "help",
+    ]
+    assert all(command.description for command in BOT_COMMANDS)
+    # Telegram ограничивает команду 32 символами и описанием 256 символами.
+    assert all(len(command.command) <= 32 for command in BOT_COMMANDS)
+    assert all(len(command.description) <= 256 for command in BOT_COMMANDS)
+
+
+def test_set_bot_commands_calls_telegram() -> None:
+    """set_bot_commands передаёт список команд в bot.set_my_commands."""
+    import asyncio
+
+    class FakeBot:
+        def __init__(self) -> None:
+            self.received = None
+
+        async def set_my_commands(self, commands):  # noqa: ANN001, ANN202 - тест
+            self.received = commands
+
+    fake = FakeBot()
+    asyncio.run(set_bot_commands(fake))
+
+    assert fake.received == list(BOT_COMMANDS)
 
 
 def test_keyboard_has_three_buttons() -> None:
