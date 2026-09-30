@@ -132,10 +132,11 @@ async def notify_test() -> int:
 
 
 def _telegram_sender(bot):
-    """Оборачивает Bot.send_message в функцию отправки для рассылки."""
+    """Оборачивает отправку Rich-сообщения (с откатом на текст) для рассылки."""
+    from app.rich import send_rich
 
     async def sender(chat_id: int, text: str) -> None:
-        await bot.send_message(chat_id, text)
+        await send_rich(bot, chat_id, text)
 
     return sender
 

@@ -29,6 +29,7 @@ from .formatting import (
 )
 from .lockfile import AlreadyRunningError, acquire_lock
 from .notify import Notifier, build_notifier
+from .rich import send_rich
 from .service import ReportCache
 from .subscribers import StateStore
 from .timeutil import local_now
@@ -104,12 +105,12 @@ def build_keyboard() -> InlineKeyboardMarkup:
 @router.message(CommandStart())
 async def cmd_start(message: Message, settings: Settings) -> None:
     """Приветствие и кнопки."""
-    await message.answer(
+    text = (
         f"Привет! Я собираю погоду и состояние моря для точки "
         f"{settings.city} ({settings.coords_label}) с нескольких площадок "
-        f"и выдаю обобщённую сводку.\n\n{HELP_TEXT}",
-        reply_markup=build_keyboard(),
+        f"и выдаю обобщённую сводку.\n\n{HELP_TEXT}"
     )
+    await send_rich(message.bot, message.chat.id, text, reply_markup=build_keyboard())
 
 
 @router.message(Command("help"))
@@ -117,14 +118,18 @@ async def cmd_help(message: Message, settings: Settings) -> None:
     """Справка по командам."""
     if not _is_allowed(message, settings):
         return
-    await message.answer(HELP_TEXT, reply_markup=build_keyboard())
+    await send_rich(
+        message.bot, message.chat.id, HELP_TEXT, reply_markup=build_keyboard()
+    )
 
 
 @router.message(Command("whoami"))
 async def cmd_whoami(message: Message) -> None:
     """Показывает chat_id — удобно для TELEGRAM_ALLOWED_CHAT_IDS."""
     user_id = message.from_user.id if message.from_user else "нет"
-    await message.answer(f"chat_id: {message.chat.id}\nuser_id: {user_id}")
+    await send_rich(
+        message.bot, message.chat.id, f"chat_id: {message.chat.id}\nuser_id: {user_id}"
+    )
 
 
 @router.message(Command("weather"))
@@ -164,7 +169,7 @@ async def cmd_events(
         report = await cache.get()
     except Exception as exc:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
         logger.exception("Не удалось собрать сводку для списка событий")
-        await message.answer(f"Не удалось собрать сводку: {exc}")
+        await send_rich(message.bot, message.chat.id, f"Не удалось собрать сводку: {exc}")
         return
 
     moment = local_now(settings.timezone)
@@ -177,7 +182,7 @@ async def cmd_events(
         f"Оповещения приходят за {settings.notify_event_lead_minutes} мин до начала.",
     ]
     for chunk in _split("\n".join(lines)):
-        await message.answer(chunk)
+        await send_rich(message.bot, message.chat.id, chunk)
 
 
 @router.message(Command("subscribe"))
@@ -189,14 +194,16 @@ async def cmd_subscribe(message: Message, settings: Settings, store: StateStore)
     if added:
         logger.info("Новая подписка: chat_id=%s", message.chat.id)
     prefix = "Подписка оформлена." if added else "Вы уже подписаны."
-    await message.answer(
+    await send_rich(
+        message.bot,
+        message.chat.id,
         f"{prefix}\n\n"
         f"• Утренняя сводка — ежедневно в {settings.notify_daily_time} "
         f"({settings.timezone_label}).\n"
         f"• Оповещения — за {settings.notify_event_lead_minutes} мин до дождя, "
         f"грозы, града, сильного ветра, тумана, жары, заморозков, резкого "
         f"похолодания, шторма и свежих землетрясений.\n\n"
-        f"Отключить: /unsubscribe"
+        f"Отключить: /unsubscribe",
     )
 
 
@@ -213,7 +220,7 @@ async def cmd_unsubscribe(message: Message, settings: Settings, store: StateStor
         if removed
         else "Вы и так не были подписаны. Включить: /subscribe"
     )
-    await message.answer(text)
+    await send_rich(message.bot, message.chat.id, text)
 
 
 @router.message(Command("status"))
@@ -237,7 +244,7 @@ async def cmd_status(message: Message, settings: Settings, store: StateStore) ->
         f"— вы подписаны: {'да' if store.is_subscribed(message.chat.id) else 'нет'}",
         f"— файл состояния: {settings.state_file}",
     ]
-    await message.answer("\n".join(lines))
+    await send_rich(message.bot, message.chat.id, "\n".join(lines))
 
 
 @router.callback_query(F.data.startswith("report:"))
@@ -266,7 +273,7 @@ async def on_report_button(
 @router.message(F.text.startswith("/"))
 async def on_unknown_command(message: Message) -> None:
     """Подсказка при неизвестной команде."""
-    await message.answer(f"Не знаю такой команды.\n\n{HELP_TEXT}")
+    await send_rich(message.bot, message.chat.id, f"Не знаю такой команды.\n\n{HELP_TEXT}")
 
 
 def _is_allowed(message: Message, settings: Settings) -> bool:
@@ -289,7 +296,7 @@ async def _send_sections(
         report = await cache.get()
     except Exception as exc:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
         logger.exception("Не удалось собрать сводку")
-        await message.answer(f"Не удалось собрать сводку: {exc}")
+        await send_rich(message.bot, message.chat.id, f"Не удалось собрать сводку: {exc}")
         return
 
     if notifier is None:
@@ -303,7 +310,7 @@ async def _send_sections(
         )
 
     for chunk in _split(text):
-        await message.answer(chunk)
+        await send_rich(message.bot, message.chat.id, chunk)
 
 
 def _split(text: str, limit: int = MAX_MESSAGE_LENGTH) -> list[str]:
@@ -369,8 +376,8 @@ async def main() -> None:
         logger.warning("Не удалось зарегистрировать команды меню", exc_info=True)
 
     async def send(chat_id: int, text: str) -> None:
-        """Отправка сообщения рассылки в Telegram."""
-        await bot.send_message(chat_id, text)
+        """Отправка сообщения рассылки в Telegram (Rich с откатом на текст)."""
+        await send_rich(bot, chat_id, text)
 
     notifier = build_notifier(settings, sender=send, cache=cache)
     dispatcher = create_dispatcher(settings, cache=cache, notifier=notifier)
