@@ -88,6 +88,8 @@ class Settings:
     timezone: str = DEFAULT_TIMEZONE
     forecast_days: int = 3
     request_timeout: float = 15.0
+    # Отладочный режим: подробное логирование и диагностические детали.
+    debug_mode: bool = False
     openweather_api_key: str = ""
     telegram_bot_token: str = ""
     telegram_allowed_chat_ids: tuple[int, ...] = field(default_factory=tuple)
@@ -151,6 +153,7 @@ class Settings:
             timezone=_env_str("WEATHER_TIMEZONE", DEFAULT_TIMEZONE),
             forecast_days=max(1, min(7, _env_int("FORECAST_DAYS", 3))),
             request_timeout=max(3.0, _env_float("REQUEST_TIMEOUT", 15.0)),
+            debug_mode=_env_bool("DEBUG_MODE", False),
             openweather_api_key=api_key,
             telegram_bot_token=_env_str("TELEGRAM_BOT_TOKEN", ""),
             telegram_allowed_chat_ids=_env_id_tuple("TELEGRAM_ALLOWED_CHAT_IDS"),
