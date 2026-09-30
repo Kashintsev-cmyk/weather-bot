@@ -352,11 +352,11 @@ def create_dispatcher(
 
 async def main() -> None:
     """Запуск бота в режиме long polling вместе с рассылкой."""
+    settings = Settings.from_env()
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG if settings.debug_mode else logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    settings = Settings.from_env()
     if not settings.telegram_bot_token:
         raise SystemExit(
             "Не задан TELEGRAM_BOT_TOKEN. Скопируйте .env.example в .env и заполните ключи."
