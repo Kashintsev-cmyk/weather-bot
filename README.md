@@ -195,7 +195,7 @@ WorkingDirectory=/home/botuser/bots/weather-bot
 EnvironmentFile=/home/botuser/bots/weather-bot/.env
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONPATH=/home/botuser/bots/weather-bot
-ExecStart=/home/botuser/bots/weather-bot/venv/bin/python /home/botuser/bots/weather-bot/run_bot.py
+ExecStart=/home/botuser/bots/weather-bot/.venv/bin/python /home/botuser/bots/weather-bot/run_bot.py
 Restart=on-failure
 RestartSec=10
 StandardOutput=append:/home/botuser/bots/weather-bot/logs/bot.log
@@ -210,14 +210,16 @@ sudo systemctl restart weather-bot.service       # после обновлени
 ```
 
 Рассылка работает внутри процесса бота, поэтому отдельные таймеры не нужны. Проверить рассылку
-без Telegram можно командой `./venv/bin/python run_bot.py --notify-dry` (состояние не меняется),
-а проверить связь с Telegram — `./venv/bin/python run_bot.py --notify-test`.
+без Telegram можно командой `./.venv/bin/python run_bot.py --notify-dry` (состояние не меняется),
+а проверить связь с Telegram — `./.venv/bin/python run_bot.py --notify-test`.
 
 Второй экземпляр бота запускать нельзя: Telegram отдаёт обновления только одному получателю
-(остальные получают 409 Conflict). Поэтому `main()` берёт блокировку `state/bot.lock`, и вторая
-копия сразу завершается с сообщением «Бот уже запущен (pid …)». Остановка по SIGTERM (в том числе
-`systemctl stop`) занимает меньше секунды, а `TimeoutStopSec=15` в юните — страховка на случай
-зависшего сетевого вызова.
+(остальные получают 409 Conflict). Поэтому `main()` берёт блокировку `state/bot.lock`. Если файл
+занят, бот ждёт освобождения до 15 с (этого достаточно, чтобы `systemctl restart` не спотыкался о
+ещё не завершившийся предыдущий процесс), а затем завершается с сообщением «Бот уже запущен
+(pid …)». Файл блокировки не удаляется и хранит pid последнего владельца. Остановка по SIGTERM
+(в том числе `systemctl stop`) занимает меньше секунды, а `TimeoutStopSec=15` в юните — страховка
+на случай зависшего сетевого вызова.
 
 ## Пример сводки (hello.txt)
 
