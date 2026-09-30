@@ -1,0 +1,50 @@
+{
+  "_note": "Синтетический ответ по схеме https://openweathermap.org/current и https://openweathermap.org/forecast5 (реальный снимок не снят: ключ не задан).",
+  "coord": {
+    "lon": 39.9171,
+    "lat": 43.4273
+  },
+  "weather": [
+    {
+      "id": 500,
+      "main": "Rain",
+      "description": "небольшой дождь",
+      "icon": "10n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 18.4,
+    "feels_like": 18.9,
+    "temp_min": 18.4,
+    "temp_max": 18.7,
+    "pressure": 1014,
+    "humidity": 90,
+    "sea_level": 1014,
+    "grnd_level": 1012
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 2.5,
+    "deg": 115,
+    "gust": 4.1
+  },
+  "rain": {
+    "1h": 0.4
+  },
+  "clouds": {
+    "all": 92
+  },
+  "dt": 1790712000,
+  "sys": {
+    "type": 2,
+    "id": 2077,
+    "country": "RU",
+    "sunrise": 1790651700,
+    "sunset": 1790694300
+  },
+  "timezone": 10800,
+  "id": 584243,
+  "name": "Adler",
+  "cod": 200
+}
