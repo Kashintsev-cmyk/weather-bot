@@ -166,9 +166,13 @@ async def cmd_events(
         return
     try:
         report = await cache.get()
-    except Exception as exc:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
+    except Exception:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
         logger.exception("Не удалось собрать сводку для списка событий")
-        await send_rich(message.bot, message.chat.id, f"Не удалось собрать сводку: {exc}")
+        await send_rich(
+            message.bot,
+            message.chat.id,
+            "Не удалось собрать сводку. Попробуйте позже или проверьте /status.",
+        )
         return
 
     moment = local_now(settings.timezone)
@@ -293,9 +297,13 @@ async def _send_sections(
     try:
         await message.bot.send_chat_action(message.chat.id, "typing")
         report = await cache.get()
-    except Exception as exc:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
+    except Exception:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
         logger.exception("Не удалось собрать сводку")
-        await send_rich(message.bot, message.chat.id, f"Не удалось собрать сводку: {exc}")
+        await send_rich(
+            message.bot,
+            message.chat.id,
+            "Не удалось собрать сводку. Попробуйте позже или проверьте /status.",
+        )
         return
 
     if notifier is None:
