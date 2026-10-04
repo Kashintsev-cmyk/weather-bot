@@ -30,11 +30,21 @@ async def check_token() -> int:
         print("TELEGRAM_BOT_TOKEN не задан — заполните .env (см. .env.example)")
         return 2
 
-    async with httpx.AsyncClient(timeout=settings.request_timeout) as client:
-        response = await client.get(
-            f"https://api.telegram.org/bot{settings.telegram_bot_token}/getMe"
-        )
-    payload = response.json()
+    try:
+        async with httpx.AsyncClient(timeout=settings.request_timeout) as client:
+            response = await client.get(
+                f"https://api.telegram.org/bot{settings.telegram_bot_token}/getMe"
+            )
+    except httpx.RequestError as exc:
+        print(f"Не удалось связаться с Telegram API: {exc}")
+        return 3
+
+    try:
+        payload = response.json()
+    except ValueError:
+        print(f"Telegram вернул не-JSON ответ (HTTP {response.status_code})")
+        return 3
+
     if payload.get("ok"):
         user = payload["result"]
         print(f"Токен рабочий: @{user.get('username')} (id {user.get('id')})")
