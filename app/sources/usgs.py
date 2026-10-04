@@ -13,7 +13,7 @@ import httpx
 
 from ..config import Settings
 from ..models import Quake, SourceResult
-from .base import SourceError, WeatherSource, to_float
+from .base import ParamValue, SourceError, WeatherSource, to_float
 
 API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 NAME = "USGS"
@@ -44,7 +44,7 @@ class UsgsQuakesSource(WeatherSource):
             raise SourceError(f"неожиданный формат ответа: {exc!r}") from exc
 
     @staticmethod
-    def build_params(settings: Settings) -> dict[str, object]:
+    def build_params(settings: Settings) -> dict[str, ParamValue]:
         """Параметры запроса FDSN: свежие толчки выше порога в радиусе точки."""
         start = datetime.now(tz=timezone.utc) - timedelta(days=settings.earthquake_days)
         return {

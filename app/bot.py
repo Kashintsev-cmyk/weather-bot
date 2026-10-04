@@ -269,15 +269,16 @@ async def on_report_button(
     }
     action = (callback.data or "").split(":", 1)[-1]
     sections = sections_by_action.get(action)
-    if callback.message is None or sections is None:
+    message = callback.message
+    if not isinstance(message, Message) or sections is None:
         await callback.answer("Раздел не найден", show_alert=False)
         return
-    if not settings.is_allowed_chat(callback.message.chat.id):
+    if not settings.is_allowed_chat(message.chat.id):
         await callback.answer("Доступ ограничен", show_alert=True)
         return
 
     await callback.answer("Собираю данные…")
-    await _send_sections(callback.message, cache, sections, notifier)
+    await _send_sections(message, cache, sections, notifier)
 
 
 @router.message(F.text.startswith("/"))
@@ -303,13 +304,17 @@ async def _send_sections(
     notifier: Notifier | None = None,
 ) -> None:
     """Формирует сводку по разделам и отправляет её (с разбивкой по 3900 символов)."""
+    bot = message.bot
+    if bot is None:
+        logger.error("message.bot is None — не могу отправить сводку в chat_id=%s", message.chat.id)
+        return
     try:
-        await message.bot.send_chat_action(message.chat.id, "typing")
+        await bot.send_chat_action(message.chat.id, "typing")
         report = await cache.get()
     except Exception:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
         logger.exception("Не удалось собрать сводку")
         await send_rich(
-            message.bot,
+            bot,
             message.chat.id,
             "Не удалось собрать сводку. Попробуйте позже или проверьте /status.",
         )

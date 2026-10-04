@@ -9,6 +9,7 @@ from ..config import Settings
 from ..models import CurrentWeather, DayForecast, HourlyPoint, SourceResult
 from ..wmo import wmo_description
 from .base import (
+    ParamValue,
     SourceError,
     WeatherSource,
     parse_date,
@@ -54,7 +55,7 @@ class OpenMeteoSource(WeatherSource):
             raise SourceError(f"неожиданный формат ответа: {exc!r}") from exc
 
     @staticmethod
-    def build_params(settings: Settings) -> dict[str, object]:
+    def build_params(settings: Settings) -> dict[str, ParamValue]:
         """Параметры запроса к /v1/forecast для точки прогноза."""
         return {
             "latitude": settings.lat,

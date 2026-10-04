@@ -7,6 +7,7 @@ import httpx
 from ..config import Settings
 from ..models import MarineCurrent, MarineDay, MarineHour, SourceResult
 from .base import (
+    ParamValue,
     SourceError,
     WeatherSource,
     parse_date,
@@ -45,7 +46,7 @@ class OpenMeteoMarineSource(WeatherSource):
             raise SourceError(f"неожиданный формат ответа: {exc!r}") from exc
 
     @staticmethod
-    def build_params(settings: Settings) -> dict[str, object]:
+    def build_params(settings: Settings) -> dict[str, ParamValue]:
         """Параметры запроса к Marine API для точки прогноза."""
         return {
             "latitude": settings.lat,

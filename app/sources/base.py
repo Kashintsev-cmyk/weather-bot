@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 
 import httpx
@@ -11,6 +12,9 @@ from ..models import SourceResult
 from ..timeutil import safe_zone
 
 USER_AGENT = "sochi-weather-bot/1.0 (https://github.com/) httpx"
+
+# Тип значения query-параметра — совместим с httpx.QueryParams.
+ParamValue = str | int | float | bool | None | Sequence[str | int | float | bool | None]
 
 
 class SourceError(RuntimeError):
@@ -42,7 +46,7 @@ class WeatherSource:
         self,
         client: httpx.AsyncClient,
         url: str,
-        params: dict[str, object] | None = None,
+        params: Mapping[str, ParamValue] | None = None,
     ) -> dict:
         """Выполняет GET-запрос и возвращает JSON, приводя ошибки к SourceError."""
         try:

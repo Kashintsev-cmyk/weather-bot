@@ -31,14 +31,6 @@ def as_local(moment: datetime, zone_name: str) -> datetime: ...
 def as_local(moment: None, zone_name: str) -> None: ...
 
 
-@overload
-def as_local(moment: datetime, zone_name: str) -> datetime: ...
-
-
-@overload
-def as_local(moment: None, zone_name: str) -> None: ...
-
-
 def as_local(moment: datetime | None, zone_name: str) -> datetime | None:
     """Приводит момент времени к часовому поясу точки прогноза."""
     if moment is None:
