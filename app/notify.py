@@ -76,7 +76,6 @@ class Notifier:
         )
         self.sender = sender
         self.cache = cache or ReportCache(settings)
-        self._report: Report | None = None
 
     @property
     def subscribers(self) -> tuple[int, ...]:
@@ -105,7 +104,6 @@ class Notifier:
         except Exception as exc:  # noqa: BLE001 - рассылка не должна падать целиком
             logger.warning("Не удалось собрать сводку для рассылки: %s", exc)
             return []
-        self._report = report
 
         delivered: list[Delivery] = []
         if self.daily_due(moment):

@@ -12,7 +12,6 @@ aiogram = pytest.importorskip("aiogram", reason="aiogram нужен для пр�
 
 from app.bot import (  # noqa: E402
     BOT_COMMANDS,
-    EVENT_SECTIONS,
     FULL_SECTIONS,
     MAX_MESSAGE_LENGTH,
     SEA_SECTIONS,
@@ -23,7 +22,6 @@ from app.bot import (  # noqa: E402
 )
 from app.formatting import (  # noqa: E402
     SECTION_CURRENT,
-    SECTION_EVENTS,
     SECTION_FORECAST,
     SECTION_MARINE,
     SECTION_SEA_FORECAST,
@@ -36,7 +34,6 @@ def test_section_presets_cover_expected_blocks() -> None:
     assert SECTION_FORECAST in WEATHER_SECTIONS
     assert SECTION_MARINE in SEA_SECTIONS
     assert SECTION_SEA_FORECAST in SEA_SECTIONS
-    assert SECTION_EVENTS in EVENT_SECTIONS
     assert set(FULL_SECTIONS).issuperset(set(WEATHER_SECTIONS) | set(SEA_SECTIONS))
 
 

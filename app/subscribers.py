@@ -146,14 +146,6 @@ class StateStore:
             keys.append(key)
         self.save()
 
-    def forget_old(self, today: date | None = None) -> None:
-        """Забывает историю старше KEEP_DAYS (полезно при разборе проблем)."""
-        moment = today or date.today()
-        self.state.daily = _prune(self.state.daily, moment)
-        self.state.alerts = _prune(self.state.alerts, moment)
-        self.save()
-
-
 def _prune(values: dict, today: date | None = None) -> dict:
     """Оставляет только записи за последние KEEP_DAYS суток."""
     limit = (today or date.today()) - timedelta(days=KEEP_DAYS)
@@ -162,7 +154,9 @@ def _prune(values: dict, today: date | None = None) -> dict:
         try:
             day = date.fromisoformat(key)
         except ValueError:
+            logger.warning("prune: пропущен ключ %r", key)
             continue
         if day >= limit:
             kept[key] = value
     return kept
+

@@ -312,15 +312,3 @@ class Report:
     quakes: list[Quake] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     raw_results: list[SourceResult] = field(default_factory=list)
-
-    def hour_at(self, moment: datetime) -> AggregatedHour | None:
-        """Обобщённый час, ближайший к указанному моменту (в пределах 30 минут)."""
-        best: AggregatedHour | None = None
-        best_delta: float | None = None
-        for hour in self.hours:
-            delta = abs((hour.time - moment).total_seconds())
-            if best_delta is None or delta < best_delta:
-                best, best_delta = hour, delta
-        if best_delta is not None and best_delta <= 1800:
-            return best
-        return None

@@ -28,11 +28,6 @@ class ReportCache:
         self.ttl = timedelta(seconds=max(0.0, ttl_seconds))
         self._lock = asyncio.Lock()
         self._report: Report | None = None
-
-    @property
-    def cached(self) -> Report | None:
-        return self._report
-
     async def get(self, force: bool = False) -> Report:
         """Возвращает сводку из кэша или запрашивает новую у площадок."""
         async with self._lock:
