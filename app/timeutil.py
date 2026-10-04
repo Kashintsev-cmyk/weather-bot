@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone, tzinfo
+from typing import overload
 from zoneinfo import ZoneInfo
 
 # Резервная зона, если база tzdata в системе недоступна.
@@ -20,6 +21,22 @@ def safe_zone(zone_name: str) -> tzinfo:
 def local_now(zone_name: str) -> datetime:
     """Текущее время в часовом поясе точки прогноза."""
     return datetime.now(safe_zone(zone_name))
+
+
+@overload
+def as_local(moment: datetime, zone_name: str) -> datetime: ...
+
+
+@overload
+def as_local(moment: None, zone_name: str) -> None: ...
+
+
+@overload
+def as_local(moment: datetime, zone_name: str) -> datetime: ...
+
+
+@overload
+def as_local(moment: None, zone_name: str) -> None: ...
 
 
 def as_local(moment: datetime | None, zone_name: str) -> datetime | None:

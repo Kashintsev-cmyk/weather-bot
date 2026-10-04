@@ -27,8 +27,8 @@ from .formatting import (
 from .models import Report
 from .service import ReportCache
 from .subscribers import StateStore
-from .timeutil import local_now
 from .textutil import split_text
+from .timeutil import local_now
 
 logger = logging.getLogger(__name__)
 

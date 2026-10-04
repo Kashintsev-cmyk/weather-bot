@@ -49,7 +49,7 @@ def _as_int(code: object) -> int | None:
     if code is None or isinstance(code, bool):
         return None
     try:
-        return int(float(code))
+        return int(float(code))  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
 

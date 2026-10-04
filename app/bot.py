@@ -32,8 +32,8 @@ from .notify import Notifier, build_notifier
 from .rich import send_rich
 from .service import ReportCache
 from .subscribers import StateStore
-from .timeutil import local_now
 from .textutil import split_text
+from .timeutil import local_now
 
 logger = logging.getLogger(__name__)
 

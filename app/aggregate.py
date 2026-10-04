@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
+from collections.abc import Sequence
 from datetime import date, datetime
 from statistics import median
 
@@ -150,7 +151,7 @@ def _number(value: object) -> float | None:
     return float(value)
 
 
-def _values_by_source(items: list[tuple[str, object]], attribute: str) -> dict[str, float]:
+def _values_by_source(items: Sequence[tuple[str, object]], attribute: str) -> dict[str, float]:
     values: dict[str, float] = {}
     for source, sample in items:
         number = _number(getattr(sample, attribute, None))
@@ -159,11 +160,11 @@ def _values_by_source(items: list[tuple[str, object]], attribute: str) -> dict[s
     return values
 
 
-def _consensus_by_source(items: list[tuple[str, object]], attribute: str) -> Consensus:
+def _consensus_by_source(items: Sequence[tuple[str, object]], attribute: str) -> Consensus:
     return consensus(_values_by_source(items, attribute))
 
 
-def _direction_consensus(items: list[tuple[str, object]], attribute: str) -> Consensus:
+def _direction_consensus(items: Sequence[tuple[str, object]], attribute: str) -> Consensus:
     """Для направлений берём круговое среднее вместо обычной медианы."""
     values = _values_by_source(items, attribute)
     result = consensus(values)
@@ -349,7 +350,7 @@ def _hour_start(moment: datetime) -> datetime:
 
 
 def _hour_consensus(
-    items: list[tuple[str, object]], attribute: str
+    items: Sequence[tuple[str, object]], attribute: str
 ) -> Consensus:
     """Консенсус по часам; для осадков берём мм/ч, а не сумму за интервал."""
     values: dict[str, float] = {}

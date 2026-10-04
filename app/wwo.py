@@ -74,7 +74,7 @@ _INTENSITY_FORMS: dict[str, tuple[str, str, str]] = {
 def wwo_description(code: object) -> str | None:
     """Русское описание по числовому коду WWO; None — если код неизвестен."""
     try:
-        normalized = int(code)  # type: ignore[arg-type]
+        normalized = int(code)  # type: ignore[call-overload]
     except (TypeError, ValueError):
         return None
     return WWO_DESCRIPTIONS.get(normalized)

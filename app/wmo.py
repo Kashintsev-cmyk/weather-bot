@@ -37,7 +37,7 @@ WMO_DESCRIPTIONS: dict[int, str] = {
 def wmo_description(code: object) -> str | None:
     """Возвращает текстовое описание кода WMO либо None, если код неизвестен."""
     try:
-        normalized = int(code)  # type: ignore[arg-type]
+        normalized = int(code)  # type: ignore[call-overload]
     except (TypeError, ValueError):
         return None
     return WMO_DESCRIPTIONS.get(normalized, f"код погоды {normalized}")
