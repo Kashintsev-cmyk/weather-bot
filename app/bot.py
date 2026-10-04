@@ -369,6 +369,8 @@ async def main() -> None:
     notification_task = asyncio.create_task(notifier.run())
     try:
         await bot.delete_webhook(drop_pending_updates=True)
+        # ВАЖНО: start_polling вызывается ровно один раз — иначе второй
+        # вызов перекроет первый, и SIGTERM не сможет остановить бота.
         await dispatcher.start_polling(
             bot, allowed_updates=dispatcher.resolve_used_update_types()
         )

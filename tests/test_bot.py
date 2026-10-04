@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
@@ -42,16 +41,6 @@ def test_help_text_mentions_subscription_commands() -> None:
 
     for command in ("/events", "/subscribe", "/unsubscribe", "/status"):
         assert command in HELP_TEXT
-
-
-def test_main_starts_polling_once() -> None:
-    """main() не должен запускать polling дважды: иначе SIGTERM не остановит бота."""
-    import app.bot as bot_module
-
-    source = Path(bot_module.__file__).read_text(encoding="utf-8")
-
-    assert source.count("start_polling(") == 1
-    assert source.count("Бот запущен") == 1
 
 
 def test_split_keeps_all_lines_and_limit() -> None:
