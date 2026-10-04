@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -10,6 +11,8 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR / ".env"
+
+logger = logging.getLogger(__name__)
 
 # Значения по умолчанию соответствуют точке в Адлере (Сочи).
 DEFAULT_CITY = "Адлер"
@@ -32,6 +35,7 @@ def _env_float(name: str, default: float) -> float:
     try:
         return float(raw.replace(",", "."))
     except ValueError:
+        logger.warning("%s=%r — не число, использую default %s", name, raw, default)
         return default
 
 
@@ -42,6 +46,7 @@ def _env_int(name: str, default: int) -> int:
     try:
         return int(raw)
     except ValueError:
+        logger.warning("%s=%r — не целое, использую default %s", name, raw, default)
         return default
 
 
@@ -55,6 +60,7 @@ def _env_id_tuple(name: str) -> tuple[int, ...]:
         try:
             ids.append(int(chunk))
         except ValueError:
+            logger.warning("%s: пропущен невалидный id %r", name, chunk)
             continue
     return tuple(ids)
 
