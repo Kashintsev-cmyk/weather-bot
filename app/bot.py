@@ -104,6 +104,8 @@ def build_keyboard() -> InlineKeyboardMarkup:
 @router.message(CommandStart())
 async def cmd_start(message: Message, settings: Settings) -> None:
     """Приветствие и кнопки."""
+    if not _is_allowed(message, settings):
+        return
     text = (
         f"Привет! Я собираю погоду и состояние моря для точки "
         f"{settings.city} ({settings.coords_label}) с нескольких площадок "
@@ -124,7 +126,12 @@ async def cmd_help(message: Message, settings: Settings) -> None:
 
 @router.message(Command("whoami"))
 async def cmd_whoami(message: Message) -> None:
-    """Показывает chat_id — удобно для TELEGRAM_ALLOWED_CHAT_IDS."""
+    """Показывает chat_id — удобно для TELEGRAM_ALLOWED_CHAT_IDS.
+
+    Намеренно не проверяет whitelist: это onboarding-команда, ей пользуются
+    пользователи, которых ещё нет в списке, чтобы получить свой chat_id
+    и передать его владельцу.
+    """
     user_id = message.from_user.id if message.from_user else "нет"
     await send_rich(
         message.bot, message.chat.id, f"chat_id: {message.chat.id}\nuser_id: {user_id}"
@@ -274,8 +281,10 @@ async def on_report_button(
 
 
 @router.message(F.text.startswith("/"))
-async def on_unknown_command(message: Message) -> None:
+async def on_unknown_command(message: Message, settings: Settings) -> None:
     """Подсказка при неизвестной команде."""
+    if not _is_allowed(message, settings):
+        return
     await send_rich(message.bot, message.chat.id, f"Не знаю такой команды.\n\n{HELP_TEXT}")
 
 
