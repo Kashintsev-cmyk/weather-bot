@@ -86,7 +86,14 @@ class StateStore:
         return BotState(subscribers=subscribers, daily=daily, alerts=alerts)
 
     def save(self) -> None:
-        """Пишет состояние атомарно (через временный файл)."""
+        """Пишет состояние атомарно (через временный файл).
+
+        _prune использует date.today() в TZ сервера, а не TZ точки прогноза.
+        На практике расхождение — не более суток у границы полуночи, и оно
+        не влияет на корректность рассылки (ключи daily/alerts уникальны
+        в пределах дня). Осознанное упрощение: не тащим timezone через
+        каждый вызов save().
+        """
         state = self.state
         state.daily = _prune(state.daily)
         state.alerts = _prune(state.alerts)
