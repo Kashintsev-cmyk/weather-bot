@@ -13,7 +13,6 @@ aiogram = pytest.importorskip("aiogram", reason="aiogram нужен для пр�
 from app.bot import (  # noqa: E402
     BOT_COMMANDS,
     FULL_SECTIONS,
-    MAX_MESSAGE_LENGTH,
     SEA_SECTIONS,
     WEATHER_SECTIONS,
     build_keyboard,
@@ -27,6 +26,7 @@ from app.formatting import (  # noqa: E402
     SECTION_SEA_FORECAST,
 )
 from app.service import ReportCache  # noqa: E402
+from app.textutil import DEFAULT_SPLIT_LIMIT  # noqa: E402
 
 
 def test_section_presets_cover_expected_blocks() -> None:
@@ -59,9 +59,9 @@ def test_split_keeps_all_lines_and_limit() -> None:
     lines = [f"Строка {index} " + "х" * 40 for index in range(200)]
     text = "\n".join(lines)
 
-    from app.bot import _split
+    from app.textutil import split_text
 
-    chunks = _split(text, limit=500)
+    chunks = split_text(text, limit=500)
 
     assert all(len(chunk) <= 500 for chunk in chunks)
     restored = [line for chunk in chunks for line in chunk.splitlines()]
@@ -69,10 +69,10 @@ def test_split_keeps_all_lines_and_limit() -> None:
 
 
 def test_split_short_text_is_single_chunk() -> None:
-    from app.bot import _split
+    from app.textutil import split_text
 
-    assert _split("короткий текст") == ["короткий текст"]
-    assert MAX_MESSAGE_LENGTH < 4096
+    assert split_text("короткий текст") == ["короткий текст"]
+    assert DEFAULT_SPLIT_LIMIT < 4096
 
 
 def test_bot_commands_menu_matches_handlers() -> None:

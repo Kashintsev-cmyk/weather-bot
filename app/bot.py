@@ -33,6 +33,7 @@ from .rich import send_rich
 from .service import ReportCache
 from .subscribers import StateStore
 from .timeutil import local_now
+from .textutil import split_text
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,6 @@ FULL_SECTIONS = (
     SECTION_NOTES,
 )
 
-MAX_MESSAGE_LENGTH = 3900
 
 HELP_TEXT = (
     "Что я умею:\n"
@@ -180,7 +180,7 @@ async def cmd_events(
         "",
         f"Оповещения приходят за {settings.notify_event_lead_minutes} мин до начала.",
     ]
-    for chunk in _split("\n".join(lines)):
+    for chunk in split_text("\n".join(lines)):
         await send_rich(message.bot, message.chat.id, chunk)
 
 
@@ -308,28 +308,8 @@ async def _send_sections(
             zone_name=notifier.settings.timezone,
         )
 
-    for chunk in _split(text):
+    for chunk in split_text(text):
         await send_rich(message.bot, message.chat.id, chunk)
-
-
-def _split(text: str, limit: int = MAX_MESSAGE_LENGTH) -> list[str]:
-    """Делит текст на части не длиннее limit, по возможности по строкам."""
-    if len(text) <= limit:
-        return [text]
-
-    chunks: list[str] = []
-    current = ""
-    for line in text.splitlines():
-        candidate = f"{current}\n{line}" if current else line
-        if len(candidate) > limit:
-            if current:
-                chunks.append(current)
-            current = line if len(line) <= limit else line[:limit]
-        else:
-            current = candidate
-    if current:
-        chunks.append(current)
-    return chunks
 
 
 def create_dispatcher(

@@ -28,6 +28,7 @@ from .models import Report
 from .service import ReportCache
 from .subscribers import StateStore
 from .timeutil import local_now
+from .textutil import split_text
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +194,7 @@ class Notifier:
         if self.sender is None:
             logger.info("[сухой режим] chat_id=%s: %s", chat_id, text.splitlines()[0])
             return
-        for chunk in _split(text):
+        for chunk in split_text(text):
             await self.sender(chat_id, chunk)
 
     async def send_test(self) -> list[Delivery]:
@@ -229,25 +230,6 @@ class Notifier:
                 await asyncio.wait_for(stop.wait(), timeout=interval)
             except asyncio.TimeoutError:
                 continue
-
-
-def _split(text: str, limit: int = MAX_TEXT_LENGTH) -> list[str]:
-    """Делит длинный текст на части не длиннее limit (по строкам)."""
-    if len(text) <= limit:
-        return [text]
-    chunks: list[str] = []
-    current = ""
-    for line in text.splitlines():
-        candidate = f"{current}\n{line}" if current else line
-        if len(candidate) > limit:
-            if current:
-                chunks.append(current)
-            current = line if len(line) <= limit else line[:limit]
-        else:
-            current = candidate
-    if current:
-        chunks.append(current)
-    return chunks
 
 
 def _fit(text: str, limit: int = MAX_TEXT_LENGTH) -> str:
