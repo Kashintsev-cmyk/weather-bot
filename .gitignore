@@ -14,6 +14,8 @@ venv/
 
 # Артефакты запуска
 *.log
+logs/
 out/
 weather_report.txt
+report.json
 state/

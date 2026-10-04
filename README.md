@@ -222,14 +222,14 @@ Environment=PYTHONUNBUFFERED=1
 ExecStart=/home/botuser/bots/weather-bot/.venv/bin/python /home/botuser/bots/weather-bot/run_bot.py
 Restart=on-failure
 RestartSec=10
-StandardOutput=append:/home/botuser/bots/weather-bot/logs/bot.log
-StandardError=append:/home/botuser/bots/weather-bot/logs/bot.log
+StandardOutput=journal
+StandardError=journal
 ```
 
 ```bash
 sudo systemctl enable --now weather-bot.service
 systemctl status weather-bot.service
-tail -f logs/bot.log
+journalctl -u weather-bot.service -f
 sudo systemctl restart weather-bot.service   # после обновления кода
 ```
 
