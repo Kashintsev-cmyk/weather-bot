@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import pytest
 
 from app.config import Settings
@@ -143,8 +142,8 @@ def test_report_cache_reuses_value() -> None:
     """Второй запрос берёт сводку из кэша, не дёргая площадки повторно."""
     import asyncio
 
-    from app.aggregate import build_report
     from app import service
+    from app.aggregate import build_report
     from app.models import CurrentWeather, SourceResult
 
     settings = Settings(city="Адлер")

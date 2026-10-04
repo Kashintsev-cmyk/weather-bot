@@ -69,7 +69,7 @@ async def collect_all(
         )
 
     results: list[SourceResult] = []
-    for source, outcome in zip(sources, outcomes):
+    for source, outcome in zip(sources, outcomes, strict=True):
         if isinstance(outcome, SourceResult):
             results.append(outcome)
         elif isinstance(outcome, SourceError):

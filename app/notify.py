@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Awaitable, Callable
 
 from .config import Settings
 from .events import Event, detect_events, upcoming_events

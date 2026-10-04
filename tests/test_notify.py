@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 from datetime import date, datetime, timedelta, timezone
 
+from helpers import hours, report
+
 from app.config import Settings
 from app.notify import KIND_ALERT, KIND_DAILY, KIND_TEST, build_notifier
 from app.subscribers import KEEP_DAYS, StateStore
-from helpers import hours, report
 
 NOW = datetime(2026, 9, 30, 7, 30, tzinfo=timezone(timedelta(hours=3)))
 # Часы прогноза в тестах строим от начала часа, чтобы окна совпадали с 08:00.

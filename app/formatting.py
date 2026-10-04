@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date, datetime
-from typing import Iterable
 
 from .aggregate import TEMP_SPREAD_WARNING
 from .config import DEFAULT_TIMEZONE

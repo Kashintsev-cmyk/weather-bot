@@ -1,0 +1,33 @@
+# Конфигурация инструментов проекта weather-bot.
+# Зависимости и метаданные — в requirements.txt, не здесь.
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["state", "logs", ".venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "E501",  # длину строки определяет разработчик, а не линтер
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]  # assert False в тестах допустим
+
+[tool.mypy]
+python_version = "3.10"
+files = ["app", "tests"]
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+show_error_codes = true

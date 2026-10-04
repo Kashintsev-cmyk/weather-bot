@@ -11,6 +11,8 @@ from __future__ import annotations
 import asyncio
 from datetime import date, datetime, timezone
 
+from helpers import load_fixture
+
 from app.config import Settings
 from app.models import SourceResult
 from app.sources import build_sources, collect_all
@@ -20,7 +22,6 @@ from app.sources.open_meteo_marine import parse as parse_marine
 from app.sources.openweathermap import parse as parse_openweathermap
 from app.sources.wttr_in import parse as parse_wttr
 from app.wwo import wwo_description
-from helpers import load_fixture
 
 
 def test_open_meteo_current_and_days(settings: Settings) -> None:

@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Iterable
 
 logger = logging.getLogger(__name__)
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+from helpers import hours, marine_hours, quake, report
+
 from app.config import Settings
 from app.events import (
     KIND_COLD_SNAP,
@@ -25,7 +27,6 @@ from app.events import (
     upcoming_events,
 )
 from app.formatting import SECTION_EVENTS, SECTION_FORECAST, format_report
-from helpers import hours, marine_hours, quake, report
 
 NOW = datetime(2026, 9, 30, 7, 0, tzinfo=timezone(timedelta(hours=3)))
 

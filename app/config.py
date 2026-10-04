@@ -146,7 +146,7 @@ class Settings:
         return bool(self.openweather_api_key)
 
     @classmethod
-    def from_env(cls, env_file: Path | None = ENV_FILE) -> "Settings":
+    def from_env(cls, env_file: Path | None = ENV_FILE) -> Settings:
         """Читает настройки из окружения, при наличии — из файла .env."""
         if env_file is not None and Path(env_file).exists():
             load_dotenv(env_file, override=False)
