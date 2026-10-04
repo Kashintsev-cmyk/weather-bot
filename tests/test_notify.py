@@ -102,6 +102,22 @@ def test_state_store_ignores_broken_file(tmp_path) -> None:
     assert store.state.daily == {}
 
 
+def test_state_store_empty_subscribers_does_not_restore_defaults(tmp_path) -> None:
+    """Пустой список подписчиков ≠ отсутствие файла.
+
+    Регрессия: раньше load() при пустом списке подставлял default_subscribers,
+    из-за чего отписавшиеся пользователи возвращались после перезапуска.
+    """
+    path = tmp_path / "state.json"
+    store = StateStore(path, default_subscribers=(111, 222))
+    assert store.unsubscribe(111) is True
+    assert store.unsubscribe(222) is True
+    assert store.subscribers() == ()
+
+    reloaded = StateStore(path, default_subscribers=(111, 222))
+    assert reloaded.subscribers() == ()
+
+
 def test_state_store_prunes_old_records(tmp_path) -> None:
     """История старше KEEP_DAYS удаляется при сохранении."""
     path = tmp_path / "state.json"

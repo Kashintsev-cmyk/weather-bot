@@ -60,13 +60,22 @@ class StateStore:
         if not isinstance(raw, dict):
             return BotState(subscribers=list(self.default_subscribers))
 
-        subscribers = [
-            int(item)
-            for item in (raw.get("subscribers") or [])
-            if isinstance(item, (int, str)) and str(item).lstrip("-").isdigit()
-        ]
-        if not subscribers:
+        if "subscribers" not in raw:
+            # Старая схема state: ключа ещё не было — берём значения по умолчанию.
             subscribers = list(self.default_subscribers)
+        elif not isinstance(raw["subscribers"], list):
+            logger.warning(
+                "%s: 'subscribers' не список (%s) — берём значения по умолчанию",
+                self.path,
+                type(raw["subscribers"]).__name__,
+            )
+            subscribers = list(self.default_subscribers)
+        else:
+            subscribers = [
+                int(item)
+                for item in raw["subscribers"]
+                if isinstance(item, (int, str)) and str(item).lstrip("-").isdigit()
+            ]
 
         daily = {str(day): str(moment) for day, moment in (raw.get("daily") or {}).items()}
         alerts = {
