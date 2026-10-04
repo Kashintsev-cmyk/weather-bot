@@ -19,3 +19,16 @@ out/
 weather_report.txt
 report.json
 state/
+
+# Python packaging
+build/
+dist/
+
+# Покрытие тестов
+.coverage
+htmlcov/
+coverage.xml
+
+# ОС и редакторы
+.DS_Store
+Thumbs.db

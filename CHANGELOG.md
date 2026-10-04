@@ -3,7 +3,7 @@
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-04
 
 ### Добавлено
 
@@ -13,10 +13,41 @@
 - **Меню команд** (`setMyCommands`) — кнопка «Меню» рядом с полем ввода.
 - Настройка `DEBUG_MODE` для подробного (DEBUG) логирования.
 - Офлайн-тесты для Rich-оформления и fallback.
+- **Воспроизводимая сборка:** `pyproject.toml` с конфигом ruff и mypy,
+  `requirements.in` + `requirements.txt` (пины с хэшами через `pip-compile`).
 
 ### Изменено
 
 - Требуется aiogram ≥ 3.31 (для поддержки Rich-сообщений).
+- Whitelist `TELEGRAM_ALLOWED_CHAT_IDS` применяется к `/start` и подсказке
+  на неизвестную команду; `/whoami` остаётся открытой для онбординга.
+- `run_bot.py --check` обрабатывает сетевые сбои и не-JSON ответы.
+- `_prune` в `state` использует TZ сервера (докстринг это фиксирует).
+
+### Исправлено
+
+- Пустой список подписчиков больше не подменяется значениями по умолчанию
+  при перезагрузке — отписавшиеся не возвращаются после рестарта.
+- Детали исключений больше не уходят пользователю в Telegram (утечка
+  `appid` OpenWeatherMap через URL из httpx).
+- Невалидные значения в `.env` логируются как warning, а не молча
+  подменяются на default.
+- Все ошибки mypy закрыты (overload, `Sequence`, `isinstance`-guard'ы,
+  `Mapping[str, ParamValue]` для httpx-параметров).
+
+### Удалено
+
+- Мёртвый код: `Notifier._report`, `ReportCache.cached`, `Report.hour_at`,
+  `EVENT_SECTIONS`, дубликат `_split` в `bot.py`/`notify.py`.
+- Алиас `OWM_API_KEY` — читается только `OPENWEATHER_API_KEY`.
+- Зависимость `pytest-asyncio` (тесты синхронные).
+
+### Инфраструктура
+
+- CI: отдельные job'ы `lint` (ruff + mypy) и `pytest` (матрица 3.10/3.11/3.12),
+  кэш pip, пины версий ruff/mypy.
+- `.gitignore`: явные `logs/` и `report.json`.
+- systemd-юнит переведён с файловых логов на journald.
 
 ## [0.1.0] - 2026-09-30
 
