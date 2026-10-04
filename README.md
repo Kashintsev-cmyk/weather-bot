@@ -63,11 +63,11 @@
 - **aiogram 3** — long polling, Router, инлайн-кнопки, Rich-сообщения
 - **httpx** — асинхронные HTTP-запросы (один общий `AsyncClient` на сбор)
 - **python-dotenv** — конфигурация из `.env`
-- **pytest + pytest-asyncio** — 80 офлайн-тестов на фикстурах
+- **pytest** — 80 офлайн-тестов на фикстурах
 - **systemd** — развёртывание, автоперезапуск, блокировка от второго экземпляра
 
 Внешних фреймворков (FastAPI/SQLAlchemy/ORM) нет намеренно: проект лёгкий,
-состояние — JSON-файл, зависимостей всего 3 + 2 тестовых.
+состояние — JSON-файл, зависимостей всего 3 + 1 тестовых.
 
 ## Архитектура
 
@@ -119,6 +119,16 @@ cp .env.example .env    # заполните TELEGRAM_BOT_TOKEN и, при же�
 Ключ [OpenWeatherMap](https://home.openweathermap.org/api_keys) опционален:
 без него площадка пропускается, сводка работает на остальных.
 
+### Зависимости
+
+Прямые зависимости описаны в `requirements.in` (диапазоны версий), точные
+пины всех пакетов, включая транзитивные, — в `requirements.txt` (сгенерирован
+`pip-compile` с хэшами). Для воспроизводимой установки используйте
+`requirements.txt`:
+
+```bash
+pip install -r requirements.txt
+
 ## Запуск
 
 ```bash
@@ -153,7 +163,7 @@ python3 -m pytest
 | `FORECAST_DAYS` | сколько дней прогноза запрашивать (1..7) | `3` |
 | `REQUEST_TIMEOUT` | таймаут HTTP-запросов, сек | `15` |
 | `DEBUG_MODE` | подробное (DEBUG) логирование | `false` |
-| `OPENWEATHER_API_KEY` | ключ OpenWeatherMap (принимается и `OWM_API_KEY`) | пусто |
+| `OPENWEATHER_API_KEY` | ключ OpenWeatherMap (опционален) | пусто |
 | `TELEGRAM_BOT_TOKEN` | токен бота | пусто |
 | `TELEGRAM_ALLOWED_CHAT_IDS` | белый список `chat_id` через запятую | пусто (доступ всем) |
 | `NOTIFY_EVENTS_ENABLED` | включить рассылку и оповещения | `true` |
