@@ -151,7 +151,7 @@ class Settings:
         if env_file is not None and Path(env_file).exists():
             load_dotenv(env_file, override=False)
 
-        api_key = _env_str("OPENWEATHER_API_KEY", "") or _env_str("OWM_API_KEY", "")
+        api_key = _env_str("OPENWEATHER_API_KEY", "")
         return cls(
             city=_env_str("WEATHER_CITY", DEFAULT_CITY),
             lat=_env_float("WEATHER_LAT", DEFAULT_LAT),
