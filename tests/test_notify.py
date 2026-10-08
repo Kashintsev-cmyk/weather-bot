@@ -11,7 +11,9 @@ from app.config import Settings
 from app.notify import KIND_ALERT, KIND_DAILY, KIND_TEST, build_notifier
 from app.subscribers import KEEP_DAYS, StateStore
 
-NOW = datetime(2026, 9, 30, 7, 30, tzinfo=timezone(timedelta(hours=3)))
+_TODAY = date.today()
+NOW = datetime(_TODAY.year, _TODAY.month, _TODAY.day, 7, 30,
+               tzinfo=timezone(timedelta(hours=3)))
 # Часы прогноза в тестах строим от начала часа, чтобы окна совпадали с 08:00.
 HOUR_BASE = NOW.replace(minute=0, second=0, microsecond=0)
 
@@ -79,14 +81,14 @@ def test_state_store_round_trip(tmp_path) -> None:
 
     assert store.subscribe(222) is True
     assert store.subscribe(222) is False
-    store.mark_daily(date(2026, 9, 30), NOW)
-    store.mark_alert("rain:2026093008", date(2026, 9, 30))
+    store.mark_daily(NOW.date(), NOW)
+    store.mark_alert(f"rain:{NOW:%Y%m%d}08", NOW.date())
 
     reloaded = StateStore(path, default_subscribers=(999,))
     assert reloaded.subscribers() == (111, 222)
-    assert reloaded.daily_sent(date(2026, 9, 30))
-    assert reloaded.alert_sent("rain:2026093008")
-    assert not reloaded.alert_sent("thunder:2026093009")
+    assert reloaded.daily_sent(NOW.date())
+    assert reloaded.alert_sent(f"rain:{NOW:%Y%m%d}08")
+    assert not reloaded.alert_sent(f"thunder:{NOW:%Y%m%d}09")
     assert reloaded.unsubscribe(111) is True
     assert reloaded.unsubscribe(111) is False
     assert StateStore(path).subscribers() == (222,)
@@ -123,7 +125,7 @@ def test_state_store_prunes_old_records(tmp_path) -> None:
     """История старше KEEP_DAYS удаляется при сохранении."""
     path = tmp_path / "state.json"
     store = StateStore(path, default_subscribers=(1,))
-    old_day = date(2026, 9, 30) - timedelta(days=KEEP_DAYS + 2)
+    old_day = NOW.date() - timedelta(days=KEEP_DAYS + 2)
     store.mark_alert("rain:old", old_day)
     store.mark_daily(old_day, NOW)
 
@@ -171,8 +173,8 @@ def test_daily_summary_is_sent_once_to_all_subscribers(tmp_path) -> None:
 
     assert [item.kind for item in first] == [KIND_DAILY, KIND_DAILY]
     assert [item.chat_id for item in first] == [111, 222]
-    assert first[0].key == "daily:2026-09-30"
-    assert "Доброе утро! Сводка на 30.09.2026" in first[0].text
+    assert first[0].key == f"daily:{NOW.date().isoformat()}"
+    assert f"Доброе утро! Сводка на {NOW:%d.%m.%Y}" in first[0].text
     assert "События: опасных явлений в ближайшем прогнозе не ожидается." in first[0].text
     assert second == []
     assert len(sender.messages) == 2
@@ -191,11 +193,11 @@ def test_alert_is_sent_once_and_marked(tmp_path) -> None:
     second = await_tick(notifier, NOW + timedelta(minutes=30))
 
     assert [item.kind for item in first] == [KIND_ALERT, KIND_ALERT]
-    assert first[0].key == "rain:2026093008"
+    assert first[0].key == f"rain:{NOW:%Y%m%d}08"
     assert "Дождь · 08:00–09:00" in first[0].text
     assert "Ожидается дождь — через 30 мин." in first[0].text
     assert second == []
-    assert notifier.store.alert_sent("rain:2026093008")
+    assert notifier.store.alert_sent(f"rain:{NOW:%Y%m%d}08")
 
 
 def test_failed_chat_does_not_block_others(tmp_path) -> None:
@@ -210,7 +212,7 @@ def test_failed_chat_does_not_block_others(tmp_path) -> None:
 
     assert [item.chat_id for item in delivered] == [222]
     assert [chat_id for chat_id, _ in sender.messages] == [222]
-    assert notifier.store.alert_sent("rain:2026093008")
+    assert notifier.store.alert_sent(f"rain:{NOW:%Y%m%d}08")
 
 
 def test_without_subscribers_nothing_is_fetched(tmp_path) -> None:
@@ -245,7 +247,7 @@ def test_dry_run_does_not_change_state(tmp_path) -> None:
         KIND_ALERT,
     ]
     assert not notifier.store.daily_sent(NOW.date())
-    assert not notifier.store.alert_sent("rain:2026093008")
+    assert not notifier.store.alert_sent(f"rain:{NOW:%Y%m%d}08")
 
 
 def test_send_test_reaches_subscribers(tmp_path) -> None:

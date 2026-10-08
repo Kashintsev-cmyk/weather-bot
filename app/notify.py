@@ -154,7 +154,12 @@ class Notifier:
             zone_name=self.settings.timezone,
         )
         headline = f"☀️ Доброе утро! Сводка на {moment:%d.%m.%Y}"
-        return _fit(f"{headline}\n\n{body}")
+        sun_line = _sun_line(report)
+        parts = [headline]
+        if sun_line:
+            parts.append(sun_line)
+        parts.append(body)
+        return _fit("\n\n".join(parts))
 
     def alert_text(self, event: Event, moment: datetime) -> str:
         """Оповещение о событии: что, когда и через сколько."""
@@ -230,6 +235,23 @@ class Notifier:
                 await asyncio.wait_for(stop.wait(), timeout=interval)
             except asyncio.TimeoutError:
                 continue
+
+
+def _sun_line(report: Report) -> str | None:
+    """Отдельная строка 'Восход … · закат …' из первого дня прогноза.
+
+    Живёт вне блока «Прогноз по дням», поэтому появляется в утренней
+    сводке независимо от того, отрендерился ли этот блок.
+    """
+    days = getattr(report, "days", None) or []
+    if not days:
+        return None
+    first = days[0]
+    sunrise = getattr(first, "sunrise", None)
+    sunset = getattr(first, "sunset", None)
+    if not (sunrise and sunset):
+        return None
+    return f"🌅 Восход {sunrise} · закат {sunset}"
 
 
 def _fit(text: str, limit: int = MAX_TEXT_LENGTH) -> str:

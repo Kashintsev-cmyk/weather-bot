@@ -135,7 +135,11 @@ def _parse_day(entry: dict) -> DayForecast | None:
     feels = _numbers(hourly, "FeelsLikeC")
     winds = _numbers(hourly, "windspeedKmph")
     gusts = _numbers(hourly, "WindGustKmph")
-    probabilities = _numbers(hourly, "chanceofrain")
+    probabilities = []
+    for item in hourly:
+        vals = _numbers([item], "chanceofrain") + _numbers([item], "chanceofsnow")
+        if vals:
+            probabilities.append(max(vals))
 
     precipitation = sum(_numbers(hourly, "precipMM"))
     descriptions = [text for text in (_describe(item) for item in hourly) if text]

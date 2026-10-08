@@ -151,7 +151,7 @@ def _parse_current(payload: dict) -> CurrentWeather:
     clouds = payload.get("clouds") or {}
     return CurrentWeather(
         source=NAME,
-        observed_at=_observed_at(payload.get("dt")),
+        observed_at=_observed_at(payload.get("dt"), payload.get("timezone")),
         temperature=to_float(main.get("temp")),
         feels_like=to_float(main.get("feels_like")),
         humidity=to_float(main.get("humidity")),
@@ -170,14 +170,17 @@ def _parse_daily(forecast_payload: dict, settings: Settings) -> list[DayForecast
     if not isinstance(entries, list):
         return []
 
+    city = forecast_payload.get("city") or {}
+    shift = to_float(city.get("timezone")) or 0.0
+
     buckets: dict[date, list[dict]] = {}
     for entry in entries:
         if not isinstance(entry, dict):
             continue
-        day = parse_date(str(entry.get("dt_txt", ""))[:10])
-        if day is None:
+        moment = _entry_local_moment(entry, shift)
+        if moment is None:
             continue
-        buckets.setdefault(day, []).append(entry)
+        buckets.setdefault(moment.date(), []).append(entry)
 
     days: list[DayForecast] = []
     for day in sorted(buckets)[: settings.forecast_days]:
@@ -280,11 +283,20 @@ def _sum_3h(entries: list[dict], key: str) -> float:
     return total
 
 
-def _observed_at(epoch: object) -> datetime | None:
+def _observed_at(epoch: object, shift: object = 0.0) -> datetime | None:
+    """Время наблюдения в поясе точки (фиксированное смещение UTC±N)."""
     value = to_float(epoch)
     if value is None:
         return None
-    return datetime.fromtimestamp(value, tz=timezone.utc)
+    offset = to_float(shift) or 0.0
+    return datetime.fromtimestamp(value, tz=timezone(timedelta(seconds=offset)))
+
+
+def _entry_local_moment(entry: dict, shift: float) -> datetime | None:
+    value = to_float(entry.get("dt"))
+    if value is None:
+        return None
+    return datetime.fromtimestamp(value, tz=timezone.utc) + timedelta(seconds=shift)
 
 
 def _local_date(payload: dict) -> date | None:

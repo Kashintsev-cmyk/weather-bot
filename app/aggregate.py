@@ -184,6 +184,24 @@ def _dominant(descriptions: dict[str, str]) -> str | None:
     return Counter(normalized).most_common(1)[0][0]
 
 
+def _median_hhmm(values: list[str | None]) -> str | None:
+    """Медиана списка 'HH:MM' — устойчивее моды при 06:25/06:26/06:27."""
+    minutes: list[int] = []
+    for v in values:
+        if not v:
+            continue
+        try:
+            h, m = v.split(":")
+            minutes.append(int(h) * 60 + int(m))
+        except (ValueError, AttributeError):
+            continue
+    if not minutes:
+        return None
+    minutes.sort()
+    med = minutes[len(minutes) // 2]
+    return f"{med // 60:02d}:{med % 60:02d}"
+
+
 def _most_common_value(values: list[str | None]) -> str | None:
     clean = [value for value in values if value]
     if not clean:
@@ -236,8 +254,8 @@ def _aggregate_days(results: list[SourceResult], settings: Settings) -> list[Agg
             day=day,
             description=_dominant(descriptions),
             descriptions=descriptions,
-            sunrise=_most_common_value([forecast.sunrise for _, forecast in items]),
-            sunset=_most_common_value([forecast.sunset for _, forecast in items]),
+            sunrise=_median_hhmm([forecast.sunrise for _, forecast in items]),
+            sunset=_median_hhmm([forecast.sunset for _, forecast in items]),
         )
         for field in DAY_FIELDS:
             setattr(aggregated, field, _consensus_by_source(items, field))
