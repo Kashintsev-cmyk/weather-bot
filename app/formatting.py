@@ -272,10 +272,19 @@ def _days_block(days: list[AggregatedDay], today: date) -> str:
             lines.append(f"  Описания по площадкам: {by_source}.")
 
         if _day_temp_spread(day) >= TEMP_SPREAD_WARNING:
-            lines.append(
-                "  Разброс температур по площадкам: "
-                f"{_temp_range(day.temp_min.low, day.temp_max.high)}."
-            )
+            spans: list[str] = []
+            if day.temp_min.available:
+                spans.append(
+                    f"минимум {_temp_range(day.temp_min.low, day.temp_min.high)}"
+                )
+            if day.temp_max.available:
+                spans.append(
+                    f"максимум {_temp_range(day.temp_max.low, day.temp_max.high)}"
+                )
+            if spans:
+                lines.append(
+                    f"  Расхождение площадок: {', '.join(spans)}."
+                )
     return "\n".join(lines)
 
 

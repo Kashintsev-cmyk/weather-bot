@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 import httpx
 
 from ..codes import normalize_wmo
@@ -89,11 +90,38 @@ def parse(payload: dict, settings: Settings) -> SourceResult:
 
     daily = payload.get("daily") or {}
     dates = daily.get("time") or []
+
+    # Мода почасовых кодов за сутки — вместо самого опасного daily.weather_code.
+    # daily.weather_code отвечает на вопрос "что худшее случилось за день",
+    # и один час дождя даёт "ливень весь день". Для описания режима дня
+    # берём самый частый почасовой код.
+    hourly_block = payload.get("hourly") or {}
+    hourly_times = hourly_block.get("time") or []
+    hourly_codes = hourly_block.get("weather_code") or []
+    code_buckets: dict[date, list[int]] = {}
+    for i, raw_time in enumerate(hourly_times):
+        moment = parse_local_dt(raw_time, settings.timezone)
+        code = pick(hourly_codes, i)
+        if moment is None or code is None:
+            continue
+        try:
+            code_buckets.setdefault(moment.date(), []).append(int(code))
+        except (TypeError, ValueError):
+            continue
+    daily_modes: dict[date, int] = {
+        d: Counter(codes).most_common(1)[0][0]
+        for d, codes in code_buckets.items()
+        if codes
+    }
+
     days: list[DayForecast] = []
     for index, raw_date in enumerate(dates):
         day = parse_date(raw_date)
         if day is None:
             continue
+        mode_code = daily_modes.get(day)
+        if mode_code is None:
+            mode_code = pick(daily.get("weather_code"), index)
         days.append(
             DayForecast(
                 source=NAME,
@@ -108,7 +136,7 @@ def parse(payload: dict, settings: Settings) -> SourceResult:
                 wind_speed_max=to_float(pick(daily.get("wind_speed_10m_max"), index)),
                 wind_gust_max=to_float(pick(daily.get("wind_gusts_10m_max"), index)),
                 uv_index_max=to_float(pick(daily.get("uv_index_max"), index)),
-                description=wmo_description(pick(daily.get("weather_code"), index)),
+                description=wmo_description(mode_code),
                 sunrise=time_only(pick(daily.get("sunrise"), index)),
                 sunset=time_only(pick(daily.get("sunset"), index)),
             )
