@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import httpx
 
 from ..codes import wmo_from_wwo
 from ..config import Settings
 from ..models import CurrentWeather, DayForecast, HourlyPoint, SourceResult
-from ..timeutil import safe_zone
+from ..timeutil import local_now, safe_zone
 from ..wwo import translate_en, wwo_description
 from .base import SourceError, WeatherSource, parse_date, to_float
 
@@ -207,16 +207,38 @@ def _numbers(entries: list[dict], key: str) -> list[float]:
 def _observation_moment(
     condition: dict, days_payload: list[dict], settings: Settings
 ) -> datetime | None:
-    """Время наблюдения: '08:28 PM' + дата первого прогнозного дня."""
+    """Время наблюдения: '08:28 PM' + дата первого прогнозного дня.
+
+    wttr.in кэширует ответы, поэтому сразу после местной полуночи
+    weather[0].date может быть вчерашним. Если построенный момент
+    оказывается больше чем на 12 часов в прошлом, добавляем сутки —
+    это ближе к реальному наблюдению.
+    """
     clock = _clock(condition.get("observation_time"))
     if clock is None:
         return None
+    zone = safe_zone(settings.timezone)
+    now = local_now(settings.timezone)
     day = parse_date(days_payload[0].get("date")) if days_payload else None
-    day = day or date.today()
+    day = day or now.date()
     hour, minute = (int(part) for part in clock.split(":"))
-    return datetime(
-        day.year, day.month, day.day, hour, minute, tzinfo=safe_zone(settings.timezone)
-    )
+    moment = datetime(day.year, day.month, day.day, hour, minute, tzinfo=zone)
+
+    # wttr.in кэширует ответы и ставит weather[0].date = сегодня,
+    # а observation_time может относиться ко вчерашнему вечеру —
+    # тогда момент уезжает в будущее. Если он далеко от now в любую
+    # сторону, пробуем ±1 сутки и берём ближайший.
+    if abs((now - moment).total_seconds()) > 12 * 3600:
+        best = moment
+        best_diff = abs((now - moment).total_seconds())
+        for shift in (timedelta(days=-1), timedelta(days=1)):
+            candidate = moment + shift
+            diff = abs((now - candidate).total_seconds())
+            if diff < best_diff:
+                best = candidate
+                best_diff = diff
+        moment = best
+    return moment
 
 
 def _clock(value: object) -> str | None:

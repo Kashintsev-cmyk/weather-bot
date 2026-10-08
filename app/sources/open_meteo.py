@@ -9,6 +9,7 @@ from ..codes import normalize_wmo
 from ..config import Settings
 from ..models import CurrentWeather, DayForecast, HourlyPoint, SourceResult
 from ..wmo import wmo_description
+from ..timeutil import local_now
 from .base import (
     ParamValue,
     SourceError,
@@ -151,8 +152,22 @@ def _parse_hourly(payload: dict, settings: Settings) -> list[HourlyPoint]:
     """Разбирает блок hourly: до MAX_HOURS часов вперёд для детектора событий."""
     hourly = payload.get("hourly") or {}
     times = hourly.get("time") or []
+
+    # Окно от текущего часа, а не от 00:00 суток: иначе к вечеру
+    # MAX_HOURS точек покрывают заметно меньше суток вперёд.
+    now_hour = local_now(settings.timezone).replace(
+        minute=0, second=0, microsecond=0
+    )
+    start_index = 0
+    for i, raw in enumerate(times):
+        moment = parse_local_dt(raw, settings.timezone)
+        if moment is not None and moment >= now_hour:
+            start_index = i
+            break
+
     points: list[HourlyPoint] = []
-    for index, raw_time in enumerate(times[:MAX_HOURS]):
+    for index in range(start_index, min(start_index + MAX_HOURS, len(times))):
+        raw_time = times[index]
         moment = parse_local_dt(raw_time, settings.timezone)
         if moment is None:
             continue
