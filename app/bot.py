@@ -54,7 +54,7 @@ FULL_SECTIONS = (
 
 HELP_TEXT = (
     "Что я умею:\n"
-    "/weather — погода сейчас и прогноз по дням\n"
+    "/weather — погода сейчас и прогноз по дням\n/weather now — свежая сводка (обойти 5-минутный кэш)\n"
     "/sea — состояние моря: вода, волна, зыбь и прогноз волнения\n"
     "/events — что опасного ждёт в ближайшие часы: дождь, гроза, ветер, "
     "волнение, туман, заморозки, землетрясения\n"
@@ -142,10 +142,12 @@ async def cmd_whoami(message: Message) -> None:
 async def cmd_weather(
     message: Message, settings: Settings, cache: ReportCache
 ) -> None:
-    """Погода сейчас и прогноз по дням."""
+    """Погода сейчас и прогноз по дням. '/weather now' — обойти кэш."""
     if not _is_allowed(message, settings):
         return
-    await _send_sections(message, cache, WEATHER_SECTIONS)
+    args = (message.text or "").split(maxsplit=1)
+    force = len(args) > 1 and args[1].strip().lower().startswith("now")
+    await _send_sections(message, cache, WEATHER_SECTIONS, force=force)
 
 
 @router.message(Command("sea"))
@@ -302,6 +304,7 @@ async def _send_sections(
     cache: ReportCache,
     sections: tuple[str, ...],
     notifier: Notifier | None = None,
+    force: bool = False,
 ) -> None:
     """Формирует сводку по разделам и отправляет её (с разбивкой по 3900 символов)."""
     bot = message.bot
@@ -310,7 +313,7 @@ async def _send_sections(
         return
     try:
         await bot.send_chat_action(message.chat.id, "typing")
-        report = await cache.get()
+        report = await cache.get(force=force)
     except Exception:  # noqa: BLE001 - сообщаем пользователю о любой ошибке
         logger.exception("Не удалось собрать сводку")
         await send_rich(
