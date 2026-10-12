@@ -186,9 +186,43 @@ def test_cold_snap_is_measured_from_peak(settings: Settings) -> None:
     snap = _by_kind(events, KIND_COLD_SNAP)
     assert snap is not None
     assert snap.level == LEVEL_WARNING
-    assert snap.starts_at == NOW + timedelta(hours=1)
+    # Событие начинается в первый час резкого падения, а не в час пика.
+    # Здесь пик 08:00–09:00 (20 °C), обрыв в 09:00→10:00 (−8 °C/ч).
+    assert snap.starts_at == NOW + timedelta(hours=2)
     assert "на 12 °C" in snap.details
     assert "минимум 8 °C" in snap.details
+
+
+def test_cold_snap_starts_at_real_drop_not_at_plateau(settings: Settings) -> None:
+    """Плоский пик и позднее падение: событие начинается там, где реально холодает.
+
+    Регрессия: раньше starts_at ставился на час максимума, из-за чего
+    "резкое похолодание" показывалось на 5 часов раньше реального обрыва.
+    """
+    built = hours(
+        NOW,
+        [
+            {"shift": 1, "temperature": 24.0},   # пик
+            {"shift": 2, "temperature": 24.0},
+            {"shift": 3, "temperature": 23.5},
+            {"shift": 4, "temperature": 23.0},
+            {"shift": 5, "temperature": 22.0},
+            {"shift": 6, "temperature": 20.0},   # -2 °C/ч — первое резкое падение
+            {"shift": 7, "temperature": 18.0},
+            {"shift": 8, "temperature": 17.0},
+            {"shift": 9, "temperature": 16.0},   # минимум
+        ],
+    )
+    events = detect_events(report(settings, built, now=NOW), settings, now=NOW)
+
+    snap = _by_kind(events, KIND_COLD_SNAP)
+    assert snap is not None
+    # Резкий шаг — shift 5 → shift 6 (22 → 20). Начало ставится на час ПЕРЕД
+    # обрывом (shift 5, 12:00), чтобы предупреждение за N минут успело
+    # сработать до реального падения.
+    assert snap.starts_at == NOW + timedelta(hours=5)
+    # Минимум — shift 9 (16 °C), ends_at = shift 9 + 1 час.
+    assert snap.ends_at == NOW + timedelta(hours=10)
 
 
 def test_marine_swell_and_storm(settings: Settings) -> None:

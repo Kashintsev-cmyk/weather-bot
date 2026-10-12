@@ -70,6 +70,9 @@ KIND_TITLES = {
 SNOW_KINDS = ("snow", "sleet")
 # Максимальный разрыв между часами внутри одного события.
 EPISODE_GAP = timedelta(hours=3, minutes=30)
+# Резкое похолодание: окно от пика до минимума и порог скорости падения.
+COLD_SNAP_MAX_WINDOW_HOURS = 18
+COLD_SNAP_RATE_C_PER_HOUR = -2.0
 MARINE_GAP = timedelta(hours=6)
 HEAVY_RAIN_MM_PER_HOUR = 5.0
 # Насколько свежим должно быть землетрясение, чтобы попасть в оповещение.
@@ -518,13 +521,20 @@ def _frost_event(items: list[AggregatedHour]) -> Event:
 
 
 def _cold_snap_event(hours: list[AggregatedHour], settings: Settings) -> Event | None:
-    """Ищет момент, когда температура падает на notify_temp_drop_c от максимума."""
+    """Ищет резкое похолодание: от пика до минимума с заметной скоростью падения.
+
+    Событие начинается не в час максимума, а в первый час, когда падение
+    становится быстрым (<= COLD_SNAP_RATE_C_PER_HOUR). Пик и минимум должны
+    укладываться в COLD_SNAP_MAX_WINDOW_HOURS — иначе это медленный тренд,
+    а не резкое похолодание.
+    """
     best: tuple[int, int, float] | None = None
     for index, hour in enumerate(hours):
         start_value = hour.temperature.median
         if start_value is None:
             continue
-        for later_index in range(index + 1, len(hours)):
+        window_end = min(index + 1 + COLD_SNAP_MAX_WINDOW_HOURS, len(hours))
+        for later_index in range(index + 1, window_end):
             later = hours[later_index].temperature.median
             if later is None:
                 continue
@@ -537,23 +547,31 @@ def _cold_snap_event(hours: list[AggregatedHour], settings: Settings) -> Event |
         return None
 
     start_index, end_index, drop = best
-    items = hours[start_index : end_index + 1]
-    begin, _ = _span(items)
+
+    # Сдвигаем начало к последнему часу ПЕРЕД резким падением:
+    # так предупреждение за N минут до события успевает сработать
+    # до того, как температура реально начнёт падать.
+    sharp_start = start_index
+    for i in range(start_index, end_index):
+        curr = hours[i].temperature.median
+        nxt = hours[i + 1].temperature.median
+        if curr is None or nxt is None:
+            continue
+        if (float(nxt) - float(curr)) <= COLD_SNAP_RATE_C_PER_HOUR:
+            sharp_start = i
+            break
+
+    items = hours[sharp_start : end_index + 1]
     coldest = _lowest(items)
     return Event(
         kind=KIND_COLD_SNAP,
         level=LEVEL_WARNING,
-        starts_at=begin,
+        starts_at=hours[sharp_start].time,
         ends_at=hours[end_index].time + timedelta(hours=1),
         summary="Резкое похолодание",
         details=f"на {drop:.0f} °C, минимум {_number(coldest, '°C', 0)}",
         sources=_sources(items),
     )
-
-
-# ---------------------------------------------------------------------------
-# Море и землетрясения
-# ---------------------------------------------------------------------------
 
 
 def _marine_events(
