@@ -11,7 +11,7 @@ from ..codes import wmo_from_owm
 from ..config import Settings
 from ..models import CurrentWeather, DayForecast, HourlyPoint, SourceResult
 from ..timeutil import safe_zone
-from .base import ParamValue, SourceError, WeatherSource, parse_date, to_float
+from .base import ParamValue, SourceError, WeatherSource, to_float
 
 CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather"
 FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
