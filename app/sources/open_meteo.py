@@ -107,6 +107,8 @@ def parse(payload: dict, settings: Settings) -> SourceResult:
         code = pick(hourly_codes, i)
         if moment is None or code is None:
             continue
+        if not isinstance(code, (int, str)):
+            continue
         try:
             code_buckets.setdefault(moment.date(), []).append(int(code))
         except (TypeError, ValueError):
@@ -124,7 +126,12 @@ def parse(payload: dict, settings: Settings) -> SourceResult:
             continue
         mode_code = daily_modes.get(day)
         if mode_code is None:
-            mode_code = pick(daily.get("weather_code"), index)
+            raw_code = pick(daily.get("weather_code"), index)
+            if isinstance(raw_code, (int, str)):
+                try:
+                    mode_code = int(raw_code)
+                except (TypeError, ValueError):
+                    mode_code = None
         days.append(
             DayForecast(
                 source=NAME,
