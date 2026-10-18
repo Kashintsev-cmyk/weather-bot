@@ -119,7 +119,7 @@ class Settings:
     earthquakes_enabled: bool = True
     earthquake_radius_km: float = 300.0
     earthquake_min_magnitude: float = 3.0
-    earthquake_days: int = 14
+    earthquake_days: int = 7
     tsunami_magnitude: float = 6.5
     # Состояние бота: подписки и отправленные уведомления.
     state_file: Path = DEFAULT_STATE_FILE
