@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 
 import httpx
 
@@ -132,7 +132,7 @@ def _entry_moment(entry: dict, settings: Settings) -> datetime | None:
     epoch = to_float(entry.get("dt"))
     if epoch is None:
         return None
-    return datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone(
+    return datetime.fromtimestamp(epoch, tz=UTC).astimezone(
         safe_zone(settings.timezone)
     )
 
@@ -296,7 +296,7 @@ def _entry_local_moment(entry: dict, shift: float) -> datetime | None:
     value = to_float(entry.get("dt"))
     if value is None:
         return None
-    return datetime.fromtimestamp(value, tz=timezone.utc) + timedelta(seconds=shift)
+    return datetime.fromtimestamp(value, tz=UTC) + timedelta(seconds=shift)
 
 
 def _local_date(payload: dict) -> date | None:
@@ -304,7 +304,7 @@ def _local_date(payload: dict) -> date | None:
     if value is None:
         return None
     shift = to_float(payload.get("timezone")) or 0.0
-    moment = datetime.fromtimestamp(value, tz=timezone.utc) + timedelta(seconds=shift)
+    moment = datetime.fromtimestamp(value, tz=UTC) + timedelta(seconds=shift)
     return moment.date()
 
 
@@ -314,5 +314,5 @@ def _clock(epoch: object, shift: object) -> str | None:
     if value is None:
         return None
     offset = to_float(shift) or 0.0
-    moment = datetime.fromtimestamp(value, tz=timezone.utc) + timedelta(seconds=offset)
+    moment = datetime.fromtimestamp(value, tz=UTC) + timedelta(seconds=offset)
     return moment.strftime("%H:%M")

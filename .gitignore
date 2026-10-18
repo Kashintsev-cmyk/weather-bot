@@ -32,3 +32,5 @@ coverage.xml
 # ОС и редакторы
 .DS_Store
 Thumbs.db
+# Old 3.10 venv (fallback during 3.12 migration)
+.venv310/

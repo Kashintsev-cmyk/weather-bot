@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -46,7 +46,7 @@ class UsgsQuakesSource(WeatherSource):
     @staticmethod
     def build_params(settings: Settings) -> dict[str, ParamValue]:
         """Параметры запроса FDSN: свежие толчки выше порога в радиусе точки."""
-        start = datetime.now(tz=timezone.utc) - timedelta(days=settings.earthquake_days)
+        start = datetime.now(tz=UTC) - timedelta(days=settings.earthquake_days)
         return {
             "format": "geojson",
             "latitude": settings.lat,
@@ -104,7 +104,7 @@ def _moment(value: object) -> datetime | None:
     milliseconds = to_float(value)
     if milliseconds is None:
         return None
-    return datetime.fromtimestamp(milliseconds / 1000.0, tz=timezone.utc)
+    return datetime.fromtimestamp(milliseconds / 1000.0, tz=UTC)
 
 
 def _place(value: object) -> str | None:

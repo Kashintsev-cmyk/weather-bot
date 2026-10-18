@@ -1,7 +1,4 @@
-# Зависимости телеграм-бота погоды (Python 3.10+)
+# Прод-зависимости (Python 3.12+)
 aiogram>=3.31,<4
 httpx>=0.27
 python-dotenv>=1.0
-
-# Для тестов (установка: pip install -r requirements.txt)
-pytest>=8.0

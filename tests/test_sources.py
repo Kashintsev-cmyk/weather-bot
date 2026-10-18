@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from helpers import load_fixture
 
@@ -117,7 +117,7 @@ def test_openweathermap_current(settings: Settings) -> None:
     assert result.current.cloud_cover == 92.0
     assert result.current.precipitation == 0.4
     assert result.current.description == "небольшой дождь"
-    assert result.current.observed_at == datetime(2026, 9, 29, 20, 0, tzinfo=timezone.utc)
+    assert result.current.observed_at == datetime(2026, 9, 29, 20, 0, tzinfo=UTC)
 
 
 def test_openweathermap_daily_aggregation(settings: Settings) -> None:

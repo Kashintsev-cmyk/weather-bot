@@ -1,10 +1,16 @@
-# Конфигурация инструментов проекта weather-bot.
-# Зависимости и метаданные — в requirements.txt, не здесь.
+[project]
+name = "weather-bot"
+version = "0.1.0"
+description = "Telegram weather bot with multi-source forecasts"
+requires-python = ">=3.12"
+license = "LicenseRef-Proprietary"
+
+# Зависимости — в requirements.in / requirements.txt.
 
 [tool.ruff]
-line-length = 100
-target-version = "py310"
-extend-exclude = ["state", "logs", ".venv"]
+line-length = 88
+target-version = "py312"
+extend-exclude = ["state", "logs", ".venv", ".venv310"]
 
 [tool.ruff.lint]
 select = [
@@ -23,7 +29,7 @@ ignore = [
 "tests/*" = ["B011"]  # assert False в тестах допустим
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 files = ["app", "tests"]
 ignore_missing_imports = true
 warn_unused_configs = true
