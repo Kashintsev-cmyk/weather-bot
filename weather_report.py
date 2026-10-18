@@ -21,9 +21,7 @@ from app.config import Settings
 from app.events import detect_events
 from app.formatting import (
     ALL_SECTIONS,
-    SECTION_CURRENT,
     SECTION_EVENTS,
-    SECTION_FORECAST,
     SECTION_MARINE,
     SECTION_NOTES,
     SECTION_SEA_FORECAST,
