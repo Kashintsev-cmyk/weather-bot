@@ -210,8 +210,23 @@ def _episodes(
 
 
 def _span(items: list) -> tuple[datetime, datetime]:
-    """Начало и конец эпизода (конец — начало последнего часа плюс час)."""
-    return items[0].time, items[-1].time + timedelta(hours=1)
+    """Начало и конец эпизода.
+
+    Конец = время последнего часа + медианный шаг между часами. Для
+    площадок с 3-часовым шагом (OpenWeatherMap) окно не занижается:
+    эпизод 13:00, 16:00, 19:00 → конец 22:00, а не 20:00.
+    """
+    if not items:
+        raise ValueError("_span: пустой список")
+    start = items[0].time
+    if len(items) == 1:
+        return start, items[0].time + timedelta(hours=1)
+    gaps = sorted(
+        (items[i].time - items[i - 1].time).total_seconds() / 3600
+        for i in range(1, len(items))
+    )
+    step_hours = max(1, int(round(gaps[len(gaps) // 2])))
+    return start, items[-1].time + timedelta(hours=step_hours)
 
 
 def _peak(items: list, attribute: str) -> float | None:

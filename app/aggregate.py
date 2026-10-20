@@ -165,12 +165,23 @@ def _consensus_by_source(items: Sequence[tuple[str, object]], attribute: str) ->
 
 
 def _direction_consensus(items: Sequence[tuple[str, object]], attribute: str) -> Consensus:
-    """Для направлений берём круговое среднее вместо обычной медианы."""
+    """Для направлений берём круговое среднее вместо обычной медианы.
+
+    low/high вычисляются как отклонение от среднего по кратчайшей
+    дуге: для 350° и 10° среднее ≈ 0°, low ≈ -10°, high ≈ +10° →
+    spread 20° (а не 340° от обычной медианы 10° с low=10°, high=350°).
+    """
     values = _values_by_source(items, attribute)
     result = consensus(values)
+    if not values:
+        return result
     mean = circular_mean(list(values.values()))
-    if mean is not None:
-        result.median = mean
+    if mean is None:
+        return result
+    deviations = [((v - mean + 180) % 360) - 180 for v in values.values()]
+    result.median = mean % 360
+    result.low = mean + min(deviations)
+    result.high = mean + max(deviations)
     return result
 
 
