@@ -74,6 +74,8 @@ async def collect_all(
             results.append(outcome)
         elif isinstance(outcome, SourceError):
             results.append(SourceResult(source=source.name, error=str(outcome)))
+        elif isinstance(outcome, (KeyboardInterrupt, SystemExit)):
+            raise outcome
         elif isinstance(outcome, BaseException):
             results.append(
                 SourceResult(source=source.name, error=f"{outcome.__class__.__name__}: {outcome}")

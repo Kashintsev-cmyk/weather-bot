@@ -211,3 +211,23 @@ def test_collect_all_keeps_errors_as_results() -> None:
     assert results[1].error == "HTTP 401"
     assert results[2].error is not None and "ValueError" in results[2].error
 
+
+
+def test_collect_all_reraises_keyboard_interrupt() -> None:
+    """Ctrl+C не глотается gather: KeyboardInterrupt пробрасывается.
+
+    Регресс: asyncio.gather(return_exceptions=True) возвращает
+    KeyboardInterrupt как outcome, и старый код превращал его в
+    SourceResult.error — пользователь не мог прервать сбор.
+    """
+    source = _StubSource("Прерывание")
+
+    async def fake_collect(client) -> SourceResult:  # noqa: ANN001 - тест
+        raise KeyboardInterrupt
+
+    source.collect = fake_collect  # type: ignore[method-assign]
+
+    import pytest
+
+    with pytest.raises(KeyboardInterrupt):
+        asyncio.run(collect_all(Settings(), sources=[source]))
