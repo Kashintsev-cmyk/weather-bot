@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.aggregate import _direction_consensus
 from app.events import _span
@@ -10,7 +10,7 @@ from app.events import _span
 
 def _hour(h: int) -> object:
     """Простой объект с .time — только для _span."""
-    return type("_H", (), {"time": datetime(2026, 1, 1, h, tzinfo=timezone.utc)})()
+    return type("_H", (), {"time": datetime(2026, 1, 1, h, tzinfo=UTC)})()
 
 
 # --- BLOCKER #1: _span для 3-часового шага ---
@@ -19,18 +19,18 @@ def _hour(h: int) -> object:
 def test_span_three_hour_step() -> None:
     """OWM (3-часовой шаг): конец = last + 3h, не +1h."""
     start, end = _span([_hour(13), _hour(16), _hour(19)])
-    assert start == datetime(2026, 1, 1, 13, tzinfo=timezone.utc)
-    assert end == datetime(2026, 1, 1, 22, tzinfo=timezone.utc)
+    assert start == datetime(2026, 1, 1, 13, tzinfo=UTC)
+    assert end == datetime(2026, 1, 1, 22, tzinfo=UTC)
 
 
 def test_span_one_hour_step() -> None:
     _, end = _span([_hour(13), _hour(14), _hour(15)])
-    assert end == datetime(2026, 1, 1, 16, tzinfo=timezone.utc)
+    assert end == datetime(2026, 1, 1, 16, tzinfo=UTC)
 
 
 def test_span_single_item_defaults_to_one_hour() -> None:
     _, end = _span([_hour(13)])
-    assert end == datetime(2026, 1, 1, 14, tzinfo=timezone.utc)
+    assert end == datetime(2026, 1, 1, 14, tzinfo=UTC)
 
 
 # --- BLOCKER #2: _direction_consensus для 350°/10° ---
