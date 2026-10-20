@@ -6,6 +6,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dotenv import load_dotenv
 
@@ -69,7 +70,13 @@ def _env_bool(name: str, default: bool) -> bool:
     raw = os.getenv(name)
     if raw is None or not raw.strip():
         return default
-    return raw.strip().lower() in {"1", "true", "yes", "on", "да"}
+    val = raw.strip().lower()
+    if val in {"1", "true", "yes", "on", "да"}:
+        return True
+    if val in {"0", "false", "no", "off", "нет"}:
+        return False
+    logger.warning("%s=%r — не распознано, использую default %s", name, raw, default)
+    return default
 
 
 def _env_clock(name: str, default: str) -> str:
@@ -152,11 +159,25 @@ class Settings:
             load_dotenv(env_file, override=False)
 
         api_key = _env_str("OPENWEATHER_API_KEY", "")
+        lat = _env_float("WEATHER_LAT", DEFAULT_LAT)
+        if not (-90 <= lat <= 90):
+            logger.warning("WEATHER_LAT=%r вне диапазона [-90, 90], использую default %s", lat, DEFAULT_LAT)
+            lat = DEFAULT_LAT
+        lon = _env_float("WEATHER_LON", DEFAULT_LON)
+        if not (-180 <= lon <= 180):
+            logger.warning("WEATHER_LON=%r вне диапазона [-180, 180], использую default %s", lon, DEFAULT_LON)
+            lon = DEFAULT_LON
+        tz = _env_str("WEATHER_TIMEZONE", DEFAULT_TIMEZONE)
+        try:
+            ZoneInfo(tz)
+        except (ZoneInfoNotFoundError, TypeError):
+            logger.warning("WEATHER_TIMEZONE=%r невалидный IANA id, использую default %s", tz, DEFAULT_TIMEZONE)
+            tz = DEFAULT_TIMEZONE
         return cls(
             city=_env_str("WEATHER_CITY", DEFAULT_CITY),
-            lat=_env_float("WEATHER_LAT", DEFAULT_LAT),
-            lon=_env_float("WEATHER_LON", DEFAULT_LON),
-            timezone=_env_str("WEATHER_TIMEZONE", DEFAULT_TIMEZONE),
+            lat=lat,
+            lon=lon,
+            timezone=tz,
             forecast_days=max(1, min(7, _env_int("FORECAST_DAYS", 3))),
             request_timeout=max(3.0, _env_float("REQUEST_TIMEOUT", 15.0)),
             debug_mode=_env_bool("DEBUG_MODE", False),

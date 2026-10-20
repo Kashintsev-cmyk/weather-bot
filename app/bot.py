@@ -146,7 +146,7 @@ async def cmd_weather(
     if not _is_allowed(message, settings):
         return
     args = (message.text or "").split(maxsplit=1)
-    force = len(args) > 1 and args[1].strip().lower().startswith("now")
+    force = len(args) > 1 and args[1].strip().lower() == "now"
     await _send_sections(message, cache, WEATHER_SECTIONS, force=force)
 
 
@@ -296,6 +296,10 @@ def _is_allowed(message: Message, settings: Settings) -> bool:
     if settings.is_allowed_chat(message.chat.id):
         return True
     logger.warning("Отклонён запрос от chat_id=%s", message.chat.id)
+    # Уведомляем пользователя, чтобы он не ждал ответа молча.
+    asyncio.ensure_future(
+        send_rich(message.bot, message.chat.id, "Доступ ограничен.")
+    )
     return False
 
 
@@ -402,7 +406,7 @@ async def main() -> None:
     finally:
         notification_task.cancel()
         with suppress(asyncio.CancelledError):
-            await notification_task
+                await notification_task
         await bot.session.close()
         lock.close()
 
